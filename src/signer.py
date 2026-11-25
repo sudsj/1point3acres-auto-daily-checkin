@@ -97,8 +97,13 @@ def sign_today(
     if msg.startswith(("签到成功", "恭喜你签到成功")):
         logger.success(f"✅ {msg}")
         return msg
-    # 已经签到的场景：返回 errno -1 或 msg 包含 '已经签到' 字样
-    if errno == -1 or "已经签到" in msg:
+    # Already checked in — do NOT treat login failures as success
+    if "请先登录" in msg or "未登录" in msg or "登录" == msg:
+        raise RuntimeError(f"签到失败（未登录）：{data}")
+    if "已经签到" in msg or "今日已签" in msg:
+        logger.info(f"今日已签到：{msg}")
+        return "已签到 ✓"
+    if errno == -1 and ("签到" in msg):
         logger.info(f"今日已签到：{msg}")
         return "已签到 ✓"
     # 其他错误
